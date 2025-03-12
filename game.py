@@ -75,11 +75,11 @@ while running:
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            print("huuuh")
             with open("stats.json", "r") as f:
                 stat_file = json.load(f)
                 for i in stats.keys():
                     if i in stat_file.keys():
-                        print("hihi")
                         stat_file[i][0] += stats[i][0]
                         stat_file[i][1] += stats[i][1]
                     else:
@@ -119,6 +119,10 @@ while running:
                     code_country = png_path[4:-4].upper()
                     country = codes[code_country].lower()
                     if country == text.lower():
+                        if code_country in stats.keys():
+                            stats[code_country][0] += 1
+                        else:
+                            stats[code_country] = [1,0]
                         png_path = get_random_file("png")  # Change directory to where your PNGs are stored
                         flag = pygame.image.load(png_path).convert_alpha() if png_path else None
                         flag = pygame.transform.scale(flag, (600, 350))  # Adjust size as needed
