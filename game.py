@@ -36,7 +36,7 @@ stats = {}
 stat_file = {}
 
 # Load country names
-with open("countries.json", "r") as f:
+with open("data/countries.json", "r") as f:
     codes = json.load(f)
 
 # Load stats from file
