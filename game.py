@@ -59,18 +59,24 @@ def load_scaled_flag(png_path, height=100):
         return pygame.transform.scale(flag, (new_width, height)), new_width  # Return both scaled flag and width
     return None, 0
 
-# Sort & get top 5 most correct/wrong flags
 def get_top_stats():
     global stat_file
     if not stat_file:
         return [], []
-    
-    sorted_stats = sorted(stat_file.items(), key=lambda x: x[1][1], reverse=True)
-    top_wrong = sorted_stats[:5]
-    sorted_correct = sorted(stat_file.items(), key=lambda x: x[1][0], reverse=True)
-    top_correct = sorted_correct[:5]
 
-    return top_correct, top_wrong
+    # Compute correct-to-wrong ratios
+    flag_ratios = {
+        code: (correct, wrong, (correct + 1) / (wrong + 1))  # Avoid division by zero
+        for code, (correct, wrong) in stat_file.items()
+    }
+
+    # Sort by highest ratio for best known flags
+    best_known = sorted(flag_ratios.items(), key=lambda x: x[1][2], reverse=True)[:5]
+    
+    # Sort by lowest ratio for worst known flags
+    worst_known = sorted(flag_ratios.items(), key=lambda x: x[1][2])[:5]
+
+    return best_known, worst_known
 
 # Load first flag
 png_path = get_random_file("png")
@@ -105,27 +111,27 @@ while running:
         top_correct, top_wrong = get_top_stats()
 
         # Display "Most Correct" stats
-        correct_text = font.render("Top 5 Correct Guesses:", True, WHITE)
+        correct_text = font.render("Top 5 Best Known Flags:", True, WHITE)
         screen.blit(correct_text, (100, 100))
-        for i, (code, (correct, _)) in enumerate(top_correct):
+        for i, (code, (correct, _, ratio)) in enumerate(top_correct):
             country_name = codes.get(code, code)
             flag_path = f"png/{code.lower()}.png"
             if os.path.exists(flag_path):
                 flag_image, width = load_scaled_flag(flag_path, height=50)  # Small flags
                 screen.blit(flag_image, (100, 140 + i * 80))
-            country_text = font.render(f"{i+1}. {country_name} - {correct} times", True, WHITE)
+            country_text = font.render(f"{i+1}. {country_name} - {ratio:.2f} ratio", True, WHITE)
             screen.blit(country_text, (220, 150 + i * 80))
 
         # Display "Most Incorrect" stats
-        wrong_text = font.render("Top 5 Incorrect Guesses:", True, WHITE)
+        wrong_text = font.render("Top 5 Worst Known Flags:", True, WHITE)
         screen.blit(wrong_text, (650, 100))
-        for i, (code, (_, wrong)) in enumerate(top_wrong):
+        for i, (code, (_, wrong, ratio)) in enumerate(top_wrong):
             country_name = codes.get(code, code)
             flag_path = f"png/{code.lower()}.png"
             if os.path.exists(flag_path):
                 flag_image, width = load_scaled_flag(flag_path, height=50)  # Small flags
                 screen.blit(flag_image, (650, 140 + i * 80))
-            country_text = font.render(f"{i+1}. {country_name} - {wrong} times", True, WHITE)
+            country_text = font.render(f"{i+1}. {country_name} - {ratio:.2f} ratio", True, WHITE)
             screen.blit(country_text, (770, 150 + i * 80))
 
         # "Back" button to return to game
